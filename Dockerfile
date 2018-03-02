@@ -29,14 +29,22 @@ RUN curl -SLO "https://github.com/jgm/pandoc/releases/download/$PANDOC_VERSION/p
 
 RUN git clone https://github.com/benweet/stackedit /opt/stackedit
 
-WORKDIR /opt/stackedit
-
-ENV SERVE_V4 true
 ENV NPM_CONFIG_LOGLEVEL warn
 
+RUN mkdir -p /opt/stackedit/stackedit_v4
+WORKDIR /opt/stackedit/stackedit_v4
+ENV SERVE_V4 true
+ENV V4_VERSION 4.3.22
+RUN npm pack stackedit@$V4_VERSION \
+  && tar xzf stackedit-*.tgz --strip 1 \
+  && yarn \
+  && yarn cache clean
+
+WORKDIR /opt/stackedit
 RUN npm install -g yarn gulp && \
-    npm install --unsafe-perm && npm cache clean --force && \
-    npm run build
+    npm install --unsafe-perm && npm cache clean --force
+ENV NODE_ENV production
+RUN npm run build
 
 COPY docker-entrypoint.sh /entrypoint.sh
 
